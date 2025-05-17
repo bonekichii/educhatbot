@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dark Mode & Speech Test</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    color: black;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.dark {
+    background-color: #121212;
+    color: #eee;
+  }
+  #darkToggle {
+    margin: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  #speechBtn {
+    margin: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  #speechBtn.listening {
+    background-color: red;
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<button id="darkToggle">Toggle Dark Mode</button>
+<button id="speechBtn" title="Start Speech Recognition">🎙️ Start Speech</button>
+<p id="output"></p>
+
+<script>
+  // Dark mode toggle
+  const darkToggle = document.getElementById('darkToggle');
+
+  // Apply saved mode on load
+  if(localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark');
+  }
+
+  darkToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('darkMode', isDark);
+  });
+
+  // Speech Recognition
+  const speechBtn = document.getElementById('speechBtn');
+  const output = document.getElementById('output');
+  let recognition;
+
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      speechBtn.classList.add('listening');
+      speechBtn.textContent = '🎙️ Listening... Click to Stop';
+    };
+
+    recognition.onend = () => {
+      speechBtn.classList.remove('listening');
+      speechBtn.textContent = '🎙️ Start Speech';
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      speechBtn.classList.remove('listening');
+      speechBtn.textContent = '🎙️ Start Speech';
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      output.textContent = `You said: "${transcript}"`;
+      // You can call your send() here if you want
+    };
+
+    speechBtn.addEventListener('click', () => {
+      if (speechBtn.classList.contains('listening')) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    });
+  } else {
+    speechBtn.style.display = 'none';
+    output.textContent = 'Speech Recognition not supported in this browser.';
+  }
+</script>
+
+</body>
+</html>

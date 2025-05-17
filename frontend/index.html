@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>EduTubeBot</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --primary: #4caf50;
+      --background: #f7f7f9;
+      --background-dark: #181818;
+      --chat-bg: #fff;
+      --chat-bg-dark: #23272b;
+      --bot-bg: #f1f9f1;
+      --bot-bg-dark: #223322;
+      --user-bg: #e3f2fd;
+      --user-bg-dark: #233a50;
+      --border-radius: 12px;
+      --transition: 0.2s;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: #222;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body.dark {
+      background: var(--background-dark);
+      color: #eaeaea;
+    }
+    .center-main {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .main-chat {
+      width: 100%;
+      max-width: 900px;
+      min-width: 340px;
+      margin: 40px 0;
+      background: var(--chat-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+      padding: 0 0 10px 0;
+      display: flex;
+      flex-direction: column;
+      transition: background var(--transition);
+      min-height: 75vh;
+      max-height: 90vh;
+    }
+    body.dark .main-chat {
+      background: var(--chat-bg-dark);
+      box-shadow: 0 0 15px rgba(0,0,0,0.25);
+    }
+    .header {
+      padding: 28px 0 10px 0;
+      text-align: center;
+      font-size: 2.1em;
+      color: var(--primary);
+      letter-spacing: 1px;
+      font-weight: 600;
+      background: none;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      user-select: none;
+    }
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 28px 16px 28px;
+      min-height: 320px;
+      max-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+    }
+    .msg {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      font-size: 1.06em;
+      max-width: 90%;
+      position: relative;
+    }
+    .msg.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .bubble {
+      padding: 13px 18px;
+      border-radius: var(--border-radius);
+      background: var(--bot-bg);
+      color: #222;
+      min-width: 40px;
+      max-width: 100%;
+      word-break: break-word;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+      font-size: 1.03em;
+      transition: background var(--transition), color var(--transition);
+    }
+    .msg.user .bubble {
+      background: var(--user-bg);
+      color: #003366;
+    }
+    body.dark .bubble {
+      background: var(--bot-bg-dark);
+      color: #b9fbc0;
+    }
+    body.dark .msg.user .bubble {
+      background: var(--user-bg-dark);
+      color: #cce5ff;
+    }
+    .timestamp {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 2px;
+      align-self: flex-end;
+      user-select: none;
+    }
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 8px;
+    }
+    .result-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: none;
+      border-radius: 8px;
+      padding: 0;
+      margin: 0;
+    }
+    .result-thumb {
+      width: 90px;
+      height: 52px;
+      border-radius: 7px;
+      object-fit: cover;
+      background: #eee;
+      border: 1px solid #e6e6e6;
+      flex-shrink: 0;
+      transition: box-shadow 0.2s;
+    }
+    .result-thumb:hover {
+      box-shadow: 0 0 12px #0b7dda33;
+    }
+    .result-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .result-title {
+      font-size: 1.08em;
+      font-weight: 500;
+      color: #0b7dda;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 340px;
+    }
+    .result-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .result-btn {
+      background: #f2f2f2;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .result-btn:hover {
+      background: #e0e0e0;
+    }
+    body.dark .result-btn {
+      background: #333;
+      color: #eaeaea;
+    }
+    body.dark .result-btn:hover {
+      background: #444;
+    }
+    .input-area {
+      display: flex;
+      padding: 15px 28px 0 28px;
+      gap: 10px;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 17px;
+      background: #fff;
+      color: #222;
+      transition: border 0.2s;
+    }
+    body.dark .input-area input {
+      background: #23272b;
+      color: #eaeaea;
+      border: 1px solid #444;
+    }
+    .input-area button {
+      padding: 12px 18px;
+      font-size: 17px;
+      border: none;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .input-area button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+    .input-area button:hover:enabled {
+      background-color: #388e3c;
+    }
+    /* Side drawers */
+    .drawer {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 340px;
+      max-width: 98vw;
+      background: var(--chat-bg);
+      box-shadow: 0 0 18px rgba(0,0,0,0.13);
+      z-index: 100;
+      overflow-y: auto;
+      transition: transform 0.22s;
+      padding: 0 0 18px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    body.dark .drawer {
+      background: var(--chat-bg-dark);
+    }
+    .drawer.left {
+      left: 0;
+      transform: translateX(-100%);
+    }
+    .drawer.right {
+      right: 0;
+      transform: translateX(100%);
+    }
+    .drawer.open {
+      transform: translateX(0);
+    }
+    .drawer-header {
+      font-size: 1.15em;
+      font-weight: 500;
+      padding: 24px 20px 10px 20px;
+      background: none;
+      color: var(--primary);
+      border-bottom: 1px solid #eaeaea;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-close {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 8px;
+      line-height: 1;
+    }
+    .drawer-content {
+      flex: 1;
+      padding: 12px 20px 0 20px;
+      min-height: 60px;
+    }
+    .drawer-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+    .drawer-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f9f9f9;
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 0.99em;
+    }
+    body.dark .drawer-list li {
+      background: #23272b;
+    }
+    .drawer-list .watch-thumbnail {
+      width: 60px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+    .drawer-list .drawer-remove {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .drawer-list .drawer-remove:hover {
+      background: #c0392b;
+    }
+    .drawer-list .drawer-copy {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .drawer-list .drawer-copy:hover {
+      background: #0056b3;
+    }
+    .drawer-list .drawer-title {
+      color: #0b7dda;
+      text-decoration: none;
+      font-weight: 500;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .drawer-list .drawer-timestamp {
+      font-size: 11px;
+      color: #aaa;
+      margin-left: 7px;
+    }
+    .drawer-actions {
+      display: flex;
+      gap: 10px;
+      padding: 10px 20px 0 20px;
+    }
+    .drawer-actions button {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      background: #eee;
+      color: #222;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    body.dark .drawer-actions button {
+      background: #333;
+      color: #eaeaea;
+    }
+    .drawer-actions button:hover {
+      background: #e0e0e0;
+    }
+    body.dark .drawer-actions button:hover {
+      background: #444;
+    }
+    /* Floating side buttons */
+    .side-btn {
+      position: fixed;
+      top: 22px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: #fff;
+      color: var(--primary);
+      font-size: 21px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .side-btn:hover {
+      background: #eaeaea;
+      color: #222;
+    }
+    body.dark .side-btn {
+      background: #23272b;
+      color: #b9fbc0;
+    }
+    body.dark .side-btn:hover {
+      background: #333;
+      color: #fff;
+    }
+    .side-btn.left { left: 22px; }
+    .side-btn.right { right: 22px; }
+    @media (max-width: 1200px) {
+      .main-chat { max-width: 99vw; }
+      .drawer { width: 90vw; }
+      .side-btn.left, .side-btn.right { left: 10px; right: 10px; }
+      .chat-list { padding-left: 10px; padding-right: 10px; }
+      .input-area { padding-left: 10px; padding-right: 10px; }
+    }
+    @media (max-width: 600px) {
+      .main-chat { margin: 10px 0; min-height: 70vh; }
+      .drawer-header { font-size: 1em; }
+      .chat-list { max-height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+  <button class="side-btn left" id="openHistoryBtn" title="Chat History">🕑</button>
+  <button class="side-btn right" id="openWatchBtn" title="Watch Later">⭐</button>
+  <div class="drawer left" id="historyDrawer">
+    <div class="drawer-header">
+      Chat History
+      <button class="drawer-close" onclick="closeDrawer('historyDrawer')">&times;</button>
+    </div>
+    <div class="drawer-content">
+      <ul class="drawer-list" id="historyList"></ul>
+      <div class="drawer-actions">
+        <button onclick="clearChatHistory()">Clear</button>
+        <button onclick="downloadChatHistory()">Download</button>
+      </div>
+    </div>
+  </div>
+  <div class="drawer right" id="watchDrawer">
+    <div class="drawer-header">
+      Watch Later
+      <button class="drawer-close" onclick="closeDrawer('watchDrawer')">&times;</button>
+    </div>
+    <div class="drawer-content">
+      <ul class="drawer-list" id="watchDrawerList"></ul>
+      <div class="drawer-actions">
+        <button onclick="clearWatchLater()">Clear</button>
+      </div>
+    </div>
+  </div>
+  <div class="center-main">
+    <div class="main-chat">
+      <div class="header">EduTubeBot 🎓</div>
+      <div class="chat-list" id="chat"></div>
+      <form class="input-area" onsubmit="send();return false;">
+        <input id="input" placeholder="Ask something like 'Learn JavaScript'" autocomplete="off" />
+        <button type="submit" id="sendBtn">Send</button>
+        <button type="button" id="darkModeToggle" title="Toggle dark mode">🌗</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    // --- Persistent state helpers ---
+    const CHAT_HISTORY_KEY = 'edutube_chat_history';
+    const WATCH_LATER_KEY = 'edutube_watch_later';
+    const DARK_MODE_KEY = 'edutube_dark_mode';
+
+    // --- DOM elements ---
+    const chat = document.getElementById('chat');
+    const inputElem = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const openHistoryBtn = document.getElementById('openHistoryBtn');
+    const openWatchBtn = document.getElementById('openWatchBtn');
+    const historyDrawer = document.getElementById('historyDrawer');
+    const historyList = document.getElementById('historyList');
+    const watchDrawer = document.getElementById('watchDrawer');
+    const watchDrawerList = document.getElementById('watchDrawerList');
+
+    // --- Chat history ---
+    let chatHistory = [];
+    let watchLaterList = [];
+
+    // --- Dark mode ---
+    function setDarkMode(enabled) {
+      if (enabled) {
+        document.body.classList.add('dark');
+        localStorage.setItem(DARK_MODE_KEY, '1');
+      } else {
+        document.body.classList.remove('dark');
+        localStorage.setItem(DARK_MODE_KEY, '0');
+      }
+    }
+    function loadDarkMode() {
+      const dark = localStorage.getItem(DARK_MODE_KEY) === '1';
+      setDarkMode(dark);
+    }
+    darkModeToggle.onclick = () => setDarkMode(!document.body.classList.contains('dark'));
+    loadDarkMode();
+
+    // --- Watch Later ---
+    function saveWatchLater() {
+      localStorage.setItem(WATCH_LATER_KEY, JSON.stringify(watchLaterList));
+    }
+    function renderWatchLaterDrawer() {
+      watchDrawerList.innerHTML = '';
+      if (watchLaterList.length === 0) {
+        watchDrawerList.innerHTML = '<li style="color:#888;">No videos yet.</li>';
+        return;
+      }
+      watchLaterList.forEach((video, idx) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <img class="watch-thumbnail" src="${video.thumbnail}" alt="thumbnail" />
+          <a class="drawer-title" href="${video.link}" target="_blank">${video.title}</a>
+          <button class="drawer-copy" onclick="copyLink('${encodeURIComponent(video.link)}')">Copy</button>
+          <button class="drawer-remove" onclick="removeWatchLater(${idx})">Remove</button>
+        `;
+        watchDrawerList.appendChild(li);
+      });
+    }
+    function addWatchLater(video) {
+      if (!watchLaterList.some(v => v.link === video.link)) {
+        watchLaterList.push(video);
+        saveWatchLater();
+        renderWatchLaterDrawer();
+      }
+    }
+    window.removeWatchLater = function(idx) {
+      if (confirm("Remove this video from Watch Later?")) {
+        watchLaterList.splice(idx, 1);
+        saveWatchLater();
+        renderWatchLaterDrawer();
+      }
+    }
+    function clearWatchLater() {
+      if (confirm("Clear your entire Watch Later list?")) {
+        watchLaterList = [];
+        saveWatchLater();
+        renderWatchLaterDrawer();
+      }
+    }
+    function loadWatchLater() {
+      try {
+        watchLaterList = JSON.parse(localStorage.getItem(WATCH_LATER_KEY)) || [];
+      } catch {
+        watchLaterList = [];
+      }
+      renderWatchLaterDrawer();
+    }
+    loadWatchLater();
+
+    // --- Chat ---
+    function saveChatHistory() {
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
+    }
+    function renderChat() {
+      chat.innerHTML = '';
+      chatHistory.forEach(entry => {
+        if (entry.type === 'user') {
+          chat.innerHTML += `
+            <div class="msg user">
+              <div class="bubble">${entry.text}</div>
+              <div class="timestamp">${entry.time || ''}</div>
+            </div>`;
+        } else if (entry.type === 'bot') {
+          chat.innerHTML += `
+            <div class="msg bot">
+              <div class="bubble">${entry.html}</div>
+              <div class="timestamp">${entry.time || ''}</div>
+            </div>`;
+        }
+      });
+      scrollChatToBottom();
+    }
+    function scrollChatToBottom() {
+      setTimeout(() => {
+        chat.scrollTop = chat.scrollHeight;
+      }, 10);
+    }
+    function loadChatHistory() {
+      try {
+        chatHistory = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY)) || [];
+      } catch {
+        chatHistory = [];
+      }
+      renderChat();
+      renderHistoryDrawer();
+    }
+    loadChatHistory();
+
+    // --- Render Chat History Drawer ---
+    function renderHistoryDrawer() {
+      historyList.innerHTML = '';
+      if (chatHistory.length === 0) {
+        historyList.innerHTML = '<li style="color:#888;">No chat yet.</li>';
+        return;
+      }
+      chatHistory.forEach((entry, idx) => {
+        if (entry.type === 'user') {
+          historyList.innerHTML += `<li><span style="color:#388e3c;font-weight:500;">You:</span> ${entry.text}<span class="drawer-timestamp">${entry.time||''}</span></li>`;
+        } else if (entry.type === 'bot') {
+          let plain = entry.html.replace(/<[^>]+>/g, '');
+          historyList.innerHTML += `<li><span style="color:#0b7dda;font-weight:500;">Bot:</span> ${plain}<span class="drawer-timestamp">${entry.time||''}</span></li>`;
+        }
+      });
+    }
+
+    // --- Send message ---
+    async function send() {
+      const query = inputElem.value.trim();
+      if (!query) return;
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      chatHistory.push({ type: 'user', text: query, time: timeString });
+      saveChatHistory();
+      renderChat();
+      renderHistoryDrawer();
+      inputElem.value = '';
+      sendBtn.disabled = true;
+      chat.innerHTML += `<div class="msg bot"><div class="bubble">Typing...</div></div>`;
+      scrollChatToBottom();
+
+      try {
+        const res = await fetch('http://localhost:5000/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        chat.lastElementChild.remove();
+
+        let replyHTML = `<div class="results-list">`;
+        data.results.forEach((video, idx) => {
+          replyHTML += `
+            <div class="result-item">
+              <a href="${video.link}" target="_blank">
+                <img class="result-thumb" src="${video.thumbnail}" alt="thumbnail" />
+              </a>
+              <div class="result-details">
+                <a class="result-title" href="${video.link}" target="_blank">${video.title}</a>
+                <div class="result-actions">
+                  <button class="result-btn" onclick='addWatchLaterFromChat(${JSON.stringify(video).replace(/'/g, "&apos;")})'>⭐ Watch Later</button>
+                  <button class="result-btn" onclick="copyLink('${encodeURIComponent(video.link)}')">Copy</button>
+                </div>
+              </div>
+            </div>`;
+        });
+        replyHTML += `</div>`;
+
+        const botTime = new Date();
+        const botTimeString = botTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        chatHistory.push({ type: 'bot', html: replyHTML, time: botTimeString });
+        saveChatHistory();
+        renderChat();
+        renderHistoryDrawer();
+      } catch (err) {
+        chat.lastElementChild.remove();
+        const errorHTML = `<div class="bubble">❌ Oops! Something went wrong. Please try again.</div>`;
+        chatHistory.push({ type: 'bot', html: errorHTML });
+        saveChatHistory();
+        renderChat();
+        renderHistoryDrawer();
+      } finally {
+        sendBtn.disabled = false;
+        scrollChatToBottom();
+        inputElem.focus();
+      }
+    }
+
+    // Helper for adding watch later from chat
+    window.addWatchLaterFromChat = function(video) {
+      addWatchLater(video);
+    }
+
+    // --- Copy link functionality ---
+    window.copyLink = function(encodedLink) {
+      const link = decodeURIComponent(encodedLink);
+      navigator.clipboard.writeText(link).then(() => {
+        alert('Link copied to clipboard!');
+      });
+    };
+
+    // --- Drawers ---
+    function openDrawer(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    function closeDrawer(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+    openHistoryBtn.onclick = () => openDrawer('historyDrawer');
+    openWatchBtn.onclick = () => openDrawer('watchDrawer');
+    // Close drawers on outside click
+    window.addEventListener('click', function(e) {
+      if (historyDrawer.classList.contains('open') && !historyDrawer.contains(e.target) && !openHistoryBtn.contains(e.target)) {
+        closeDrawer('historyDrawer');
+      }
+      if (watchDrawer.classList.contains('open') && !watchDrawer.contains(e.target) && !openWatchBtn.contains(e.target)) {
+        closeDrawer('watchDrawer');
+      }
+    });
+
+    // --- Clear chat history ---
+    function clearChatHistory() {
+      if (confirm("Clear all chat history?")) {
+        chatHistory = [];
+        saveChatHistory();
+        renderChat();
+        renderHistoryDrawer();
+      }
+    }
+    // --- Download chat as text ---
+    function downloadChatHistory() {
+      let text = '';
+      chatHistory.forEach(entry => {
+        if (entry.type === 'user') {
+          text += `[You @ ${entry.time || ''}]: ${entry.text}\n`;
+        } else if (entry.type === 'bot') {
+          let html = entry.html.replace(/<[^>]+>/g, '');
+          text += `[Bot @ ${entry.time || ''}]: ${html.trim()}\n`;
+        }
+      });
+      const blob = new Blob([text], {type: 'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'EduTubeBot_chat.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    // --- Input focus on load and after send ---
+    window.onload = function() {
+      inputElem.focus();
+    };
+    inputElem.onkeydown = function(event) {
+      if (event.key === 'Enter') send();
+    };
+  </script>
+</body>
+</html>
